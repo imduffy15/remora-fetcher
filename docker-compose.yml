@@ -1,0 +1,54 @@
+---
+cassandra:
+  environment:
+  - CASSANDRA_START_RPC=true
+  expose:
+  - 9160
+  image: cassandra:2.2
+  ports:
+  - 7199:7199
+grafana:
+  environment:
+  - DS_NAME=kairosdb
+  - DS_TYPE=kairosdb
+  - DS_ACCESS=proxy
+  - DS_URL=http://kairosdb:8080
+  - DS_IS_DEFAULT=true
+  - DS_AUTH=false
+  image: qapps/grafana-docker:master
+  links:
+  - kairosdb
+  ports:
+  - 3000:3000
+kafka:
+  environment:
+    KAFKA_ADVERTISED_HOST_NAME: kafka
+    KAFKA_ADVERTISED_PORT: 9092
+    KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  image: wurstmeister/kafka:0.10.2.1
+  links:
+  - zookeeper
+  ports:
+  - 9092:9092
+  - 2181:2181
+kairosdb:
+  environment:
+  - CASS_HOSTS=cassandra:9160
+  expose:
+  - 4242
+  image: imduffy15/docker-kairosdb:0.0.1
+  links:
+  - cassandra
+  ports:
+  - 8080:8080
+remora:
+  environment:
+    KAFKA_ENDPOINT: kafka:9092
+  image: zalandoremora/remora:0.2.0
+  links:
+  - kafka
+  ports:
+  - 9000:9000
+zookeeper:
+  image: wurstmeister/zookeeper
